@@ -26,9 +26,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install
         
+      - name: Get start time
+        id: start_time
+        run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
+        
       - name: Build
         id: build
         run: pnpm run build
+        
+      - name: Calculate duration
+        id: duration
+        if: always()
+        run: |
+          end_time=$(date +%s)
+          start_time=${{ steps.start_time.outputs.start_time }}
+          duration=$((end_time - start_time))
+          echo "duration=$duration" >> $GITHUB_OUTPUT
         
       - name: Send Success Notification
         if: success()
@@ -47,7 +60,7 @@ jobs:
                     "ci_target": "actions-lark-demo",
                     "ci_target_image": "${{ github.repository }}",
                     "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": ${{ steps.build.duration }},
+                    "ci_takes": ${{ steps.duration.outputs.duration }},
                     "result_status": "成功",
                     "result_theme": "green"
                   }
@@ -72,7 +85,7 @@ jobs:
                     "ci_target": "actions-lark-demo",
                     "ci_target_image": "${{ github.repository }}",
                     "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": ${{ steps.build.duration }},
+                    "ci_takes": ${{ steps.duration.outputs.duration }},
                     "result_status": "失败",
                     "result_theme": "red"
                   }
