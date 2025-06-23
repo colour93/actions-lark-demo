@@ -6,14 +6,22 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  FEISHU_TEMPLATE_ID: "AAqd5SYQzjHxC"
+  FEISHU_TEMPLATE_VERSION: "0.0.1"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       build_status: ${{ job.status }}
-      build_time: ${{ steps.build_time.outputs.time }}
+      build_time: ${{ steps.calc_time.outputs.duration }}
     
     steps:
+      - name: Set start time
+        id: start_time
+        run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
+
       - uses: actions/checkout@v4
       
       - name: Setup Node.js
@@ -33,62 +41,27 @@ jobs:
         id: build
         run: pnpm run build
 
-      - name: Get build time
-        id: build_time
+      - name: Calculate build duration
+        id: calc_time
         if: always()
-        run: echo "time=$(date +%s)" >> $GITHUB_OUTPUT
+        run: |
+          end_time=$(date +%s)
+          start_time=${{ steps.start_time.outputs.start_time }}
+          duration=$((end_time - start_time))
+          echo "duration=$duration" >> $GITHUB_OUTPUT
 
   notify:
     needs: build
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Send Success Notification
-        if: needs.build.result == 'success'
-        run: |
-          curl --request POST \
-            --url ${{ secrets.FEISHU_WEBHOOK_URL }} \
-            --header 'Content-Type: application/json' \
-            --data '{
-              "msg_type": "interactive",
-              "card": {
-                "type": "template",
-                "data": {
-                  "template_id": "AAqd5SYQzjHxC",
-                  "template_version_name": "0.0.1",
-                  "template_variable": {
-                    "ci_target": "actions-lark-demo",
-                    "ci_target_image": "${{ github.repository }}",
-                    "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": ${{ needs.build.outputs.build_time }},
-                    "result_status": "成功",
-                    "result_theme": "green"
-                  }
-                }
-              }
-            }'
-            
-      - name: Send Failure Notification
-        if: needs.build.result != 'success'
-        run: |
-          curl --request POST \
-            --url ${{ secrets.FEISHU_WEBHOOK_URL }} \
-            --header 'Content-Type: application/json' \
-            --data '{
-              "msg_type": "interactive",
-              "card": {
-                "type": "template",
-                "data": {
-                  "template_id": "AAqd5SYQzjHxC",
-                  "template_version_name": "0.0.1",
-                  "template_variable": {
-                    "ci_target": "actions-lark-demo",
-                    "ci_target_image": "${{ github.repository }}",
-                    "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": ${{ needs.build.outputs.build_time }},
-                    "result_status": "失败",
-                    "result_theme": "red"
-                  }
-                }
-              }
-            }' 
+      - uses: actions/checkout@v4
+      
+      - uses: ./.github/actions/feishu-notify
+        with:
+          webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          build_result: ${{ needs.build.result }}
+          ci_target: ${{ github.event.repository.name }}
+          ci_target_image: ${{ github.repository }}
+          ci_target_tag: ${{ github.sha }}
+          build_time: ${{ needs.build.outputs.build_time }} 
