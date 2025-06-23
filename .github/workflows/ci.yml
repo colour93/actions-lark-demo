@@ -7,8 +7,6 @@ on:
     branches: [ main ]
 
 env:
-  FEISHU_TEMPLATE_ID: "AAqd5SYQzjHxC"
-  FEISHU_TEMPLATE_VERSION: "0.0.1"
 
 jobs:
   build:
@@ -57,7 +55,9 @@ jobs:
     steps:
       - uses: colour93/ci-notify-feishu@main
         with:
-          webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          feishu_template_id: ${{ env.FEISHU_TEMPLATE_ID }}
+          feishu_template_version: ${{ env.FEISHU_TEMPLATE_VERSION }}
+          feishu_webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
           build_result: ${{ needs.build.result }}
           ci_target: ${{ github.event.repository.name }}
           ci_target_image: ${{ github.repository }}
