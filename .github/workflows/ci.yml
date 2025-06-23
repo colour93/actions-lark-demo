@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: ./.github/actions/feishu-notify
+      - uses: colour93/ci-notify-feishu/.github/actions/feishu-notify
         with:
           webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
           build_result: ${{ needs.build.result }}
