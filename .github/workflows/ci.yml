@@ -53,8 +53,8 @@ jobs:
     steps:
       - uses: colour93/ci-notify-feishu@main
         with:
-          feishu_template_id: ${{ env.FEISHU_TEMPLATE_ID }}
-          feishu_template_version_name: ${{ env.FEISHU_TEMPLATE_VERSION_NAME }}
+          feishu_template_id: ${{ vars.FEISHU_TEMPLATE_ID }}
+          feishu_template_version_name: ${{ vars.FEISHU_TEMPLATE_VERSION }}
           feishu_webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
           build_result: ${{ needs.build.result }}
           ci_target: ${{ github.event.repository.name }}
