@@ -47,7 +47,7 @@ jobs:
                     "ci_target": "actions-lark-demo",
                     "ci_target_image": "${{ github.repository }}",
                     "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": "${{ steps.build.duration }}",
+                    "ci_takes": ${{ steps.build.duration }},
                     "result_status": "成功",
                     "result_theme": "green"
                   }
@@ -72,7 +72,7 @@ jobs:
                     "ci_target": "actions-lark-demo",
                     "ci_target_image": "${{ github.repository }}",
                     "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": "${{ steps.build.duration }}",
+                    "ci_takes": ${{ steps.build.duration }},
                     "result_status": "失败",
                     "result_theme": "red"
                   }
