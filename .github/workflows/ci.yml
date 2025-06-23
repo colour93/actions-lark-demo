@@ -55,9 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: colour93/ci-notify-feishu/.github/actions/feishu-notify
+      - uses: colour93/ci-notify-feishu@main
         with:
           webhook_url: ${{ secrets.FEISHU_WEBHOOK_URL }}
           build_result: ${{ needs.build.result }}
