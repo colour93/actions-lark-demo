@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build_status: ${{ job.status }}
+      build_time: ${{ steps.build_time.outputs.time }}
     
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +32,19 @@ jobs:
       - name: Build
         id: build
         run: pnpm run build
-        
+
+      - name: Get build time
+        id: build_time
+        if: always()
+        run: echo "time=$(date +%s)" >> $GITHUB_OUTPUT
+
+  notify:
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
       - name: Send Success Notification
-        if: success()
+        if: needs.build.result == 'success'
         run: |
           curl --request POST \
             --url ${{ secrets.FEISHU_WEBHOOK_URL }} \
@@ -42,12 +55,12 @@ jobs:
                 "type": "template",
                 "data": {
                   "template_id": "AAqd5SYQzjHxC",
-                  "template_version_name": "0.0.2",
+                  "template_version_name": "0.0.1",
                   "template_variable": {
                     "ci_target": "actions-lark-demo",
                     "ci_target_image": "${{ github.repository }}",
                     "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": "${{ steps.build.duration }}",
+                    "ci_takes": ${{ needs.build.outputs.build_time }},
                     "result_status": "成功",
                     "result_theme": "green"
                   }
@@ -56,7 +69,7 @@ jobs:
             }'
             
       - name: Send Failure Notification
-        if: failure()
+        if: needs.build.result != 'success'
         run: |
           curl --request POST \
             --url ${{ secrets.FEISHU_WEBHOOK_URL }} \
@@ -67,12 +80,12 @@ jobs:
                 "type": "template",
                 "data": {
                   "template_id": "AAqd5SYQzjHxC",
-                  "template_version_name": "0.0.2",
+                  "template_version_name": "0.0.1",
                   "template_variable": {
                     "ci_target": "actions-lark-demo",
                     "ci_target_image": "${{ github.repository }}",
                     "ci_target_tag": "${{ github.sha }}",
-                    "ci_takes": "${{ steps.build.duration }}",
+                    "ci_takes": ${{ needs.build.outputs.build_time }},
                     "result_status": "失败",
                     "result_theme": "red"
                   }
